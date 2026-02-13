@@ -1,11 +1,8 @@
-import mysql from 'mysql2/promise';
+import { createClient } from '@libsql/client';
 
-// Create a connection pool for better performance
-const pool = mysql.createPool({
-    uri: process.env.DATABASE_URL,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
+const client = createClient({
+    url: process.env.TURSO_DATABASE_URL || '',
+    authToken: process.env.TURSO_AUTH_TOKEN || '',
 });
 
-export default pool;
+export default client;

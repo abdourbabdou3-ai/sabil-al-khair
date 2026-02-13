@@ -1,23 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import mysql from 'mysql2/promise';
-
-// Lazy initialization of the pool
-let pool: any = null;
-
-function getPool() {
-    if (!pool) {
-        pool = mysql.createPool({
-            uri: process.env.DATABASE_URL,
-            waitForConnections: true,
-            connectionLimit: 5,
-            queueLimit: 0,
-            ssl: {
-                rejectUnauthorized: false
-            }
-        });
-    }
-    return pool;
-}
+import client from '../lib/db';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Set CORS headers
@@ -30,12 +12,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const db = getPool();
-
         // GET - Fetch all projects
         if (req.method === 'GET') {
-            const [rows] = await db.query('SELECT * FROM projects ORDER BY created_at DESC');
-            const projects = (rows as any[]).map(row => ({
+            const result = await client.execute('SELECT * FROM projects ORDER BY created_at DESC');
+            const projects = result.rows.map(row => ({
                 id: row.id,
                 title: row.title,
                 description: row.description,
@@ -52,27 +32,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // POST - Create new project
         if (req.method === 'POST') {
             const { id, title, description, imageUrl, targetAmount, currentAmount, isImportant, status, createdAt } = req.body;
-            await db.execute(
-                'INSERT INTO projects (id, title, description, image_url, target_amount, current_amount, is_important, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [id, title, description, imageUrl, targetAmount, currentAmount || 0, isImportant || false, status || 'active', createdAt]
-            );
+            await client.execute({
+                sql: 'INSERT INTO projects (id, title, description, image_url, target_amount, current_amount, is_important, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                args: [id, title, description, imageUrl, targetAmount, currentAmount || 0, isImportant ? 1 : 0, status || 'active', createdAt]
+            });
             return res.status(201).json({ success: true });
         }
 
         // PUT - Update project
         if (req.method === 'PUT') {
             const { id, title, description, imageUrl, targetAmount, currentAmount, isImportant, status } = req.body;
-            await db.execute(
-                'UPDATE projects SET title = ?, description = ?, image_url = ?, target_amount = ?, current_amount = ?, is_important = ?, status = ? WHERE id = ?',
-                [title, description, imageUrl, targetAmount, currentAmount, isImportant, status, id]
-            );
+            await client.execute({
+                sql: 'UPDATE projects SET title = ?, description = ?, image_url = ?, target_amount = ?, current_amount = ?, is_important = ?, status = ? WHERE id = ?',
+                args: [title, description, imageUrl, targetAmount, currentAmount, isImportant ? 1 : 0, status, id]
+            });
             return res.status(200).json({ success: true });
         }
 
         // DELETE - Delete project
         if (req.method === 'DELETE') {
             const { id } = req.query;
-            await db.execute('DELETE FROM projects WHERE id = ?', [id]);
+            await client.execute({
+                sql: 'DELETE FROM projects WHERE id = ?',
+                args: [id as string]
+            });
             return res.status(200).json({ success: true });
         }
 

@@ -1,0 +1,20 @@
+{
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/api/$1"
+        },
+        {
+            "source": "/((?!api/).*)",
+            "destination": "/index.html"
+        }
+    ],
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "env": {
+        "CLOUDINARY_CLOUD_NAME": "dctqgan7i",
+        "CLOUDINARY_API_KEY": "796463682942655",
+        "CLOUDINARY_API_SECRET": "HIy-3Jqajo5CQFG0Tn55-I-BiSA"
+    },
+    "framework": "vite"
+}

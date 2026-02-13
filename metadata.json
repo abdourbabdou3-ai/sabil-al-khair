@@ -1,0 +1,7 @@
+{
+  "name": "Sabil Al-Khair Mosque Platform",
+  "description": "A professional and modern mosque donation management platform for organizing community projects and financial transparency.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

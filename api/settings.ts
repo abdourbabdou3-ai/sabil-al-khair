@@ -36,6 +36,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(405).json({ error: 'Method not allowed' });
     } catch (error: any) {
         console.error('Database error:', error);
-        return res.status(500).json({ error: error.message || 'Internal server error' });
+        return res.status(500).json({
+            error: error.message || 'Internal server error',
+            env: { hasUrl: !!process.env.TURSO_DATABASE_URL, hasToken: !!process.env.TURSO_AUTH_TOKEN }
+        });
     }
 }
